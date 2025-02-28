@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Q&A Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+
+    <div class="bg-white shadow-lg rounded-lg p-6 w-96 text-center">
+        <h1 class="text-2xl font-bold mb-4">📸 Upload Image</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="image" id="imageInput" accept="image/*" class="mb-4">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">Generate</button>
+        </form>
+
+        <div id="output" class="mt-6 hidden">
+            <h2 class="text-xl font-semibold">🖼️ Caption:</h2>
+            <p id="caption" class="text-gray-700"></p>
+            <h2 class="text-xl font-semibold mt-4">🎯 Questions:</h2>
+            <ul id="questions" class="text-gray-600 text-left"></ul>
+            <img id="imagePreview" class="mt-4 w-48 rounded-md hidden" />
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const imageInput = document.getElementById("imageInput").files[0];
+
+            if (!imageInput) {
+                alert("Please select an image!");
+                return;
+            }
+
+            formData.append("image", imageInput);
+
+            fetch("/process", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                document.getElementById("output").classList.remove("hidden");
+                document.getElementById("caption").innerText = data.caption;
+                document.getElementById("questions").innerHTML = data.questions.map(q => `<li>• ${q}</li>`).join("");
+                document.getElementById("imagePreview").src = data.image_url;
+                document.getElementById("imagePreview").classList.remove("hidden");
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+
+</body>
+</html>
